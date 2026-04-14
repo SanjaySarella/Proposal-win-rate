@@ -10,7 +10,7 @@ from sklearn.metrics import (
     roc_auc_score, ConfusionMatrixDisplay
 )
 
-df = pd.read_csv("contracts_features.csv")
+df = pd.read_csv("data/contracts_features.csv")
 
 feature_cols = [
     "log_award_amount", "is_dod", "contract_duration_days",
@@ -56,9 +56,9 @@ disp = ConfusionMatrixDisplay(confusion_matrix=cm,
 disp.plot(cmap="Blues")
 plt.title("Confusion Matrix — Contract Type Prediction")
 plt.tight_layout()
-plt.savefig("confusion_matrix.png", dpi=150)
+plt.savefig("plots/confusion_matrix.png", dpi=150)
 plt.close()
-print("Saved confusion_matrix.png")
+print("Saved plots/confusion_matrix.png")
 
 # Feature importance
 importances = pd.DataFrame({
@@ -71,9 +71,9 @@ plt.barh(importances["feature"], importances["importance"], color="#2E75B6")
 plt.xlabel("Importance")
 plt.title("Feature Importance — Contract Win Prediction")
 plt.tight_layout()
-plt.savefig("feature_importance.png", dpi=150)
+plt.savefig("plots/feature_importance.png", dpi=150)
 plt.close()
-print("Saved feature_importance.png")
+print("Saved plots/feature_importance.png")
 
 # SHAP
 print("\nCalculating SHAP values...")
@@ -93,15 +93,15 @@ shap.summary_plot(
     show=False
 )
 plt.tight_layout()
-plt.savefig("shap_summary.png", dpi=150, bbox_inches="tight")
+plt.savefig("plots/shap_summary.png", dpi=150, bbox_inches="tight")
 plt.close()
-print("Saved shap_summary.png")
+print("Saved plots/shap_summary.png")
 
 # Save everything
-joblib.dump(model, "contract_model.pkl")
-joblib.dump(explainer, "shap_explainer.pkl")
-print("\nModel saved to contract_model.pkl")
-print("Explainer saved to shap_explainer.pkl")
+joblib.dump(model, "models/contract_model.pkl")
+joblib.dump(explainer, "models/shap_explainer.pkl")
+print("\nModel saved to models/contract_model.pkl")
+print("Explainer saved to models/shap_explainer.pkl")
 
 # Save test predictions for agent
 test_data = X_test.copy()
@@ -111,5 +111,5 @@ test_data["Recipient Name"] = df.loc[X_test.index, "Recipient Name"].values
 test_data["Awarding Agency"] = df.loc[X_test.index, "Awarding Agency"].values
 test_data["Award Amount"] = df.loc[X_test.index, "Award Amount"].values
 test_data["Contract Award Type"] = df.loc[X_test.index, "Contract Award Type"].values
-test_data.to_csv("test_predictions.csv", index=False)
-print("Saved test_predictions.csv")
+test_data.to_csv("data/test_predictions.csv", index=False)
+print("Saved data/test_predictions.csv")

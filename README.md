@@ -32,13 +32,12 @@ This project provides a comprehensive intelligence layer for federal contractors
 
 ## 📂 Project Structure
 
-- `data_pull.py`: Fetches raw contract data from the federal API.
-- `eda.py`: Performs Exploratory Data Analysis and generates baseline visualizations.
-- `feature_engineering.py`: Processes data and engineers predictive features.
-- `model.py`: Trains the Random Forest model and generates SHAP explanations.
-- `agent.py`: Houses the LangGraph logic for the strategic AI analyst.
-- `app.py`: The Streamlit dashboard providing a user-friendly interface for the entire pipeline.
-- `export_tableau.py`: Prepares the final dataset for Tableau ingestion.
+- **`app.py`**: The main Streamlit dashboard serving as the primary user interface.
+- **`src/`**: Contains the core logic and pipeline scripts.
+  - `data_pull.py`, `eda.py`, `feature_engineering.py`, `model.py`, `agent.py`, `export_tableau.py`
+- **`data/`**: Storage for raw and processed `.csv` datasets.
+- **`models/`**: House for trained machine learning model binaries (`.pkl`).
+- **`plots/`**: Storage for all generated visualizations and analysis charts (`.png`).
 
 ---
 
