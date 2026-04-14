@@ -73,9 +73,9 @@ def pull_contracts(num_pages=10):
             break
     
     df = pd.DataFrame(all_records)
-    df.to_csv("raw_contracts.csv", index=False)
+    df.to_csv("data/raw_contracts.csv", index=False)
     print(f"\nDone. Total records pulled: {len(df)}")
-    print(f"Saved to raw_contracts.csv")
+    print(f"Saved to data/raw_contracts.csv")
     print(f"\nColumns: {list(df.columns)}")
     return df
 

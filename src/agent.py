@@ -21,9 +21,9 @@ class ContractState(TypedDict):
     strategy_brief: Optional[str]
 
 # ── Load model and data ───────────────────────────────────────────
-model = joblib.load("contract_model.pkl")
-explainer = joblib.load("shap_explainer.pkl")
-df = pd.read_csv("test_predictions.csv")
+model = joblib.load("models/contract_model.pkl")
+explainer = joblib.load("models/shap_explainer.pkl")
+df = pd.read_csv("data/test_predictions.csv")
 llm = OllamaLLM(model="llama3.2")
 
 feature_cols = [
@@ -46,7 +46,7 @@ collection = chroma_client.get_or_create_collection(
 # Populate ChromaDB with historical contracts if empty
 if collection.count() == 0:
     print("Loading historical contracts into ChromaDB...")
-    raw_df = pd.read_csv("contracts_features.csv")
+    raw_df = pd.read_csv("data/contracts_features.csv")
     docs, ids, metas = [], [], []
     for i, row in raw_df.iterrows():
         doc = (
