@@ -23,7 +23,7 @@ class ContractState(TypedDict):
 # ── Load model and data ───────────────────────────────────────────
 model = joblib.load("models/contract_model.pkl")
 explainer = joblib.load("models/shap_explainer.pkl")
-df = pd.read_csv("data/test_predictions.csv")
+df = pd.read_csv("data/output/test_predictions.csv")
 llm = OllamaLLM(model="llama3.2")
 
 feature_cols = [
@@ -34,8 +34,9 @@ feature_cols = [
 
 # ── Set up ChromaDB ───────────────────────────────────────────────
 chroma_client = chromadb.Client()
-ef = embedding_functions.SentenceTransformerEmbeddingFunction(
-    model_name="all-MiniLM-L6-v2"
+ef = embedding_functions.OllamaEmbeddingFunction(
+    model_name="nomic-embed-text",
+    url="http://localhost:11434/api/embeddings"
 )
 
 collection = chroma_client.get_or_create_collection(
@@ -46,7 +47,7 @@ collection = chroma_client.get_or_create_collection(
 # Populate ChromaDB with historical contracts if empty
 if collection.count() == 0:
     print("Loading historical contracts into ChromaDB...")
-    raw_df = pd.read_csv("data/contracts_features.csv")
+    raw_df = pd.read_csv("data/processed/contracts_features.csv")
     docs, ids, metas = [], [], []
     for i, row in raw_df.iterrows():
         doc = (

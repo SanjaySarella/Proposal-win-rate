@@ -10,7 +10,7 @@ from sklearn.metrics import (
     roc_auc_score, ConfusionMatrixDisplay
 )
 
-df = pd.read_csv("data/contracts_features.csv")
+df = pd.read_csv("data/processed/contracts_features.csv")
 
 feature_cols = [
     "log_award_amount", "is_dod", "contract_duration_days",
@@ -111,5 +111,5 @@ test_data["Recipient Name"] = df.loc[X_test.index, "Recipient Name"].values
 test_data["Awarding Agency"] = df.loc[X_test.index, "Awarding Agency"].values
 test_data["Award Amount"] = df.loc[X_test.index, "Award Amount"].values
 test_data["Contract Award Type"] = df.loc[X_test.index, "Contract Award Type"].values
-test_data.to_csv("data/test_predictions.csv", index=False)
-print("Saved data/test_predictions.csv")
+test_data.to_csv("data/output/test_predictions.csv", index=False)
+print("Saved data/output/test_predictions.csv")
