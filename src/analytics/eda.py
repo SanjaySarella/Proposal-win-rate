@@ -1,6 +1,6 @@
 import pandas as pd
 
-df = pd.read_csv("data/raw_contracts.csv")
+df = pd.read_csv("data/raw/raw_contracts.csv")
 
 print("Shape:", df.shape)
 print("\nColumns:")

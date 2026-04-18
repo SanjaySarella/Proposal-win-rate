@@ -33,9 +33,14 @@ This project provides a comprehensive intelligence layer for federal contractors
 ## 📂 Project Structure
 
 - **`app.py`**: The main Streamlit dashboard serving as the primary user interface.
-- **`src/`**: Contains the core logic and pipeline scripts.
-  - `data_pull.py`, `eda.py`, `feature_engineering.py`, `model.py`, `agent.py`, `export_tableau.py`
-- **`data/`**: Storage for raw and processed `.csv` datasets.
+- **`src/`**: Modular source code for the project.
+  - **`pipeline/`**: Data ingestion and processing (`data_pull.py`, `feature_engineering.py`).
+  - **`modeling/`**: ML training and AI Agent logic (`model.py`, `agent.py`).
+  - **`analytics/`**: EDA and downstream reporting (`eda.py`, `export_tableau.py`).
+- **`data/`**: Tiered storage for datasets.
+  - **`raw/`**: Original API pulls.
+  - **`processed/`**: Cleaned features ready for modeling.
+  - **`output/`**: Prediction results and Tableau exports.
 - **`models/`**: House for trained machine learning model binaries (`.pkl`).
 - **`plots/`**: Storage for all generated visualizations and analysis charts (`.png`).
 
@@ -49,10 +54,13 @@ This project provides a comprehensive intelligence layer for federal contractors
     ```
 2.  **Pull Data**:
     ```bash
-    python data_pull.py
+    python src/pipeline/data_pull.py
     ```
 3.  **Run the Pipeline**:
-    Execute scripts in order: `eda.py` -> `feature_engineering.py` -> `model.py`.
+    Execute scripts in order: 
+    - `python src/analytics/eda.py`
+    - `python src/pipeline/feature_engineering.py`
+    - `python src/modeling/model.py`
 4.  **Launch the Dashboard**:
     ```bash
     python -m streamlit run app.py

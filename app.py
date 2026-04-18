@@ -1,3 +1,5 @@
+import os
+os.environ["HF_HUB_DISABLE_HTTPX"] = "1"
 import streamlit as st
 import joblib
 import numpy as np
@@ -6,13 +8,12 @@ import shap
 import matplotlib.pyplot as plt
 import chromadb
 from chromadb.utils import embedding_functions
-from langchain_ollama import OllamaLLM
-from langgraph.graph import StateGraph, END
-from typing import TypedDict, Optional
+from langchain_groq import ChatGroq
+from langchain_core.messages import HumanMessage
+from sklearn.ensemble import RandomForestClassifier
 import warnings
 warnings.filterwarnings("ignore")
 
-# ── Page config ───────────────────────────────────────────────────
 st.set_page_config(
     page_title="Federal Contract Win Rate Intelligence",
     page_icon="🏛️",
@@ -23,7 +24,12 @@ st.title("🏛️ Federal Contract Win Rate Intelligence")
 st.markdown("*AI-powered competitive positioning for federal contract opportunities*")
 st.divider()
 
-# ── Load model ────────────────────────────────────────────────────
+feature_cols = [
+    "log_award_amount", "is_dod", "contract_duration_days",
+    "recipient_experience", "agency_activity",
+    "is_dc", "award_year", "is_q4", "amount_bucket_encoded"
+]
+
 @st.cache_resource
 def load_model():
     model = joblib.load("models/contract_model.pkl")
@@ -31,16 +37,21 @@ def load_model():
     return model, explainer
 
 @st.cache_resource
+def get_embedding_function():
+    return embedding_functions.OllamaEmbeddingFunction(
+        model_name="nomic-embed-text",
+        url="http://localhost:11434/api/embeddings"
+    )
+
+@st.cache_resource
 def load_chroma():
     client = chromadb.Client()
-    ef = embedding_functions.SentenceTransformerEmbeddingFunction(
-        model_name="all-MiniLM-L6-v2"
-    )
+    ef = get_embedding_function()
     collection = client.get_or_create_collection(
         name="contracts_app", embedding_function=ef
     )
     if collection.count() == 0:
-        df = pd.read_csv("data/contracts_features.csv")
+        df = pd.read_csv("data/processed/contracts_features.csv")
         docs, ids, metas = [], [], []
         for i, row in df.iterrows():
             doc = (
@@ -66,19 +77,17 @@ def load_chroma():
 
 @st.cache_resource
 def load_llm():
-    return OllamaLLM(model="llama3.2")
+    return ChatGroq(
+        api_key=st.secrets["GROQ_API_KEY"],
+        model_name="llama-3.3-70b-versatile",
+        temperature=0.3
+    )
 
 model, explainer = load_model()
 collection = load_chroma()
 llm = load_llm()
 
-feature_cols = [
-    "log_award_amount", "is_dod", "contract_duration_days",
-    "recipient_experience", "agency_activity",
-    "is_dc", "award_year", "is_q4", "amount_bucket_encoded"
-]
-
-# ── Sidebar inputs ────────────────────────────────────────────────
+# ── Sidebar ───────────────────────────────────────────────────────
 st.sidebar.header("Contract Opportunity Details")
 
 agency = st.sidebar.selectbox("Awarding Agency", [
@@ -125,7 +134,7 @@ elif award_amount < 15000000:
 else:
     amount_bucket = 3
 
-# ── Run analysis ──────────────────────────────────────────────────
+# ── Analysis ──────────────────────────────────────────────────────
 if st.sidebar.button("Run Win Rate Analysis", type="primary"):
 
     with st.spinner("Running prediction..."):
@@ -153,7 +162,7 @@ if st.sidebar.button("Run Win Rate Analysis", type="primary"):
             key=lambda x: abs(x[1]), reverse=True
         )[:5]
 
-    # ── KPI Row ───────────────────────────────────────────────────
+    # KPIs
     col1, col2, col3, col4 = st.columns(4)
     col1.metric("Win Probability", f"{prob:.1%}")
     col2.metric("Award Amount", f"${award_amount:,.0f}")
@@ -162,7 +171,6 @@ if st.sidebar.button("Run Win Rate Analysis", type="primary"):
 
     st.divider()
 
-    # ── Two column layout ─────────────────────────────────────────
     left, right = st.columns(2)
 
     with left:
@@ -199,7 +207,6 @@ if st.sidebar.button("Run Win Rate Analysis", type="primary"):
 
     st.divider()
 
-    # ── Strategy Brief ────────────────────────────────────────────
     st.subheader("AI Strategy Brief")
     with st.spinner("Generating strategic recommendations..."):
         drivers_text = "\n".join([
@@ -218,7 +225,7 @@ TOP SHAP DRIVERS:
 SIMILAR CONTRACTS:
 {similar_text}
 
-Write a strategic brief with:
+Write a strategic brief with exactly this structure:
 COMPETITIVE ASSESSMENT: [one sentence]
 TOP 3 ACTIONS:
 1. [action + expected outcome]
@@ -229,15 +236,16 @@ RISK FLAGS:
 - [risk 2]
 BOTTOM LINE: [one sentence a VP would act on]"""
 
-        brief = llm.invoke(prompt)
-        st.markdown(brief)
+        response = llm.invoke([HumanMessage(content=prompt)])
+        st.markdown(response.content)
 
 else:
-    st.info("Configure the contract opportunity in the sidebar and click Run Win Rate Analysis to begin.")
+    st.info("Configure the contract opportunity in the sidebar and click Run Win Rate Analysis.")
     st.markdown("""
     ### How This Works
-    - **Prediction** — Random Forest model trained on 1,000 real federal contracts from USASpending.gov
-    - **Explainability** — SHAP values identify which factors are driving the win probability up or down
-    - **RAG Retrieval** — ChromaDB searches 500 historical contracts to find similar past awards
-    - **Strategy Agent** — LangGraph AI agent synthesises all inputs into an actionable positioning brief
+    - **Prediction** — Random Forest model trained on 969 real federal contracts from USASpending.gov
+    - **Explainability** — SHAP values identify which factors drive the win probability
+    - **RAG Retrieval** — ChromaDB searches 500 historical contracts for similar past awards
+    - **Strategy Agent** — LangGraph AI agent generates an actionable positioning brief
+    - **Powered by** — Groq + Llama 3 for fast, free cloud inference
     """)

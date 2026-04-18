@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-df = pd.read_csv("data/raw_contracts.csv")
+df = pd.read_csv("data/raw/raw_contracts.csv")
 
 print("Starting shape:", df.shape)
 
@@ -81,5 +81,5 @@ feature_cols = [
 print("\nSample features:")
 print(df[feature_cols + ["won_definitive"]].head())
 
-df.to_csv("data/contracts_features.csv", index=False)
-print("\nSaved to contracts_features.csv")
+df.to_csv("data/processed/contracts_features.csv", index=False)
+print("\nSaved to data/processed/contracts_features.csv")

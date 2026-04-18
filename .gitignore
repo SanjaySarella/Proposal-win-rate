@@ -6,3 +6,15 @@ venv/
 
 # Secrets
 .env
+.streamlit/secrets.toml
+
+# Models
+*.pkl
+
+# Data
+data/raw/
+data/processed/
+data/output/
+
+# Plots
+plots/
