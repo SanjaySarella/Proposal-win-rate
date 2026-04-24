@@ -9,8 +9,6 @@ venv/
 .streamlit/secrets.toml
 
 # Models
-*.pkl
-
 # Data
 data/raw/
 data/processed/
