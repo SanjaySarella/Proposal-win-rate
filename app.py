@@ -38,9 +38,8 @@ def load_model():
 
 @st.cache_resource
 def get_embedding_function():
-    return embedding_functions.OllamaEmbeddingFunction(
-        model_name="nomic-embed-text",
-        url="http://localhost:11434/api/embeddings"
+    return embedding_functions.SentenceTransformerEmbeddingFunction(
+        model_name="all-MiniLM-L6-v2"
     )
 
 @st.cache_resource
@@ -77,8 +76,10 @@ def load_chroma():
 
 @st.cache_resource
 def load_llm():
+    import os
+    groq_key = os.getenv("GROQ_API_KEY") or st.secrets.get("GROQ_API_KEY", "")
     return ChatGroq(
-        api_key=st.secrets["GROQ_API_KEY"],
+        api_key=groq_key,
         model_name="llama-3.3-70b-versatile",
         temperature=0.3
     )
