@@ -7,5 +7,3 @@ frontend/build/
 data/raw/
 data/chroma_db/
 build_log*.txt
-App.jsx
-setup_project.py
