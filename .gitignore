@@ -7,3 +7,5 @@ frontend/build/
 data/raw/
 data/chroma_db/
 build_log*.txt
+
+.streamlit/secrets.toml
