@@ -1,4 +1,4 @@
-import pickle, math, os, datetime
+import joblib, math, os, datetime
 import pandas as pd
 
 FEATURE_NAMES = [
@@ -27,10 +27,8 @@ class ModelManager:
 
     def load(self):
         base = os.path.dirname(os.path.dirname(__file__))
-        with open(os.path.join(base, "models", "contract_model.pkl"), "rb") as f:
-            self.model = pickle.load(f)
-        with open(os.path.join(base, "models", "shap_explainer.pkl"), "rb") as f:
-            self.explainer = pickle.load(f)
+        self.model     = joblib.load(os.path.join(base, "models", "contract_model.pkl"))
+        self.explainer = joblib.load(os.path.join(base, "models", "shap_explainer.pkl"))
 
     def predict(self, inp):
         features = self._features(inp)
