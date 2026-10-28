@@ -9,3 +9,9 @@ data/chroma_db/
 build_log*.txt
 
 .streamlit/secrets.toml
+
+# Local validation and frontend build products
+node_modules/
+static/
+.pytest_cache/
+__pycache__/

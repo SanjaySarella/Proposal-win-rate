@@ -1,7 +1,7 @@
-FROM node:18-slim AS frontend-build
+FROM node:22-slim AS frontend-build
 WORKDIR /frontend
-COPY frontend/package.json ./
-RUN npm install --legacy-peer-deps
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci --legacy-peer-deps
 COPY frontend/ ./
 RUN npm run build
 
@@ -11,7 +11,6 @@ ENV PIP_NO_CACHE_DIR=1
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/ ./backend/
-COPY models/ ./models/
 COPY data/ ./data/
 COPY --from=frontend-build /frontend/build ./static
 ENV PYTHONPATH=/app

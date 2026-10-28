@@ -1,69 +1,39 @@
+from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-from pydantic import BaseModel
-import os, logging
+from pydantic import BaseModel, Field, model_validator, ConfigDict
+from backend.research import metadata, research
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-app = FastAPI(title="Federal Contract Win Rate Intelligence")
-
-from backend.model import ModelManager
-from backend.agent import run_pipeline
-
-model_manager = ModelManager()
-
-@app.on_event("startup")
-async def startup():
-    logger.info("Loading model on startup...")
-    model_manager.load()
-    logger.info(f"Model loaded. ROC-AUC: {model_manager.roc_auc:.4f}")
-    logger.info("Model ready.")
-
-class ContractInput(BaseModel):
-    agency:     str
-    amount:     int
-    duration:   int
-    experience: int
-    isdc:       bool
-    isq4:       bool
-    isdod:      bool
-
-@app.get("/health")
+app = FastAPI(title='Federal Award Research', version='3.0.0')
+class ResearchInput(BaseModel):
+    model_config = ConfigDict(extra='forbid', allow_inf_nan=False)
+    agency: str | None = None
+    award_type: str | None = None
+    minimum: float = Field(0, ge=0)
+    maximum: float = Field(50000000, ge=0)
+    keyword: str = Field('', max_length=200)
+    @model_validator(mode='after')
+    def validate_filters(self):
+        if self.minimum > self.maximum:
+            raise ValueError('Minimum must not exceed maximum.')
+        return self
+@app.get('/health')
 def health():
-    return {"status": "ok"}
-
-@app.get("/model-info")
-def model_info():
-    return {
-        "model":             "Random Forest Classifier",
-        "roc_auc":           model_manager.roc_auc,
-        "contracts_trained": 969,
-        "pipeline":          "LangGraph 4-node",
-    }
-
-@app.post("/predict")
-async def predict(data: ContractInput):
-    try:
-        return await run_pipeline(data, model_manager)
-    except Exception as e:
-        logger.error(f"Prediction error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-static_dir = os.path.join(os.path.dirname(__file__), "..", "static")
-
-if os.path.exists(static_dir):
-    app.mount(
-        "/static",
-        StaticFiles(directory=os.path.join(static_dir, "static")),
-        name="static_assets",
-    )
-
-    @app.get("/")
-    async def root():
-        return FileResponse(os.path.join(static_dir, "index.html"))
-
-    @app.get("/{full_path:path}")
-    async def catch_all(full_path: str):
-        return FileResponse(os.path.join(static_dir, "index.html"))
+    return {'status':'ok','version':'3.0.0'}
+@app.get('/metadata')
+def info():
+    return metadata()
+@app.post('/research')
+def analyze(data:ResearchInput):
+    meta = metadata()
+    if data.agency and data.agency not in meta['agencies']:
+        raise HTTPException(422, 'Unknown agency in this snapshot.')
+    if data.award_type and data.award_type not in meta['types']:
+        raise HTTPException(422, 'Unknown award type in this snapshot.')
+    return research(**data.model_dump())
+@app.post('/predict')
+def retired_prediction():
+    raise HTTPException(410, 'Bid-win prediction retired: source records do not contain losing bids. Use /research.')
+static = Path(__file__).resolve().parents[1] / 'static'
+if static.exists():
+    app.mount('/', StaticFiles(directory=static, html=True), name='frontend')
