@@ -10,7 +10,7 @@ test('shows actual research response and empty-selection boundary',async()=>{
  global.fetch=jest.fn().mockResolvedValueOnce({ok:true,json:async()=>meta}).mockResolvedValueOnce({ok:true,json:async()=>({count:0,total:0,median:null,records:[],method:'Snapshot only'})});
  await act(async()=>root.render(<App/>));
  await act(async()=>container.querySelector('form').dispatchEvent(new Event('submit',{bubbles:true,cancelable:true})));
- expect(container.textContent).toContain('No awards match these filters');
+ expect(container.textContent).toContain('No award records match the current criteria');
  expect(container.textContent).not.toContain('WIN PROBABILITY');
  expect(JSON.parse(global.fetch.mock.calls[1][1].body).agency).toBe(null);
 });
