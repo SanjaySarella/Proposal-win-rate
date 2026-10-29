@@ -13,6 +13,7 @@ def test_source_reconciliation():
     assert r['total']==pytest.approx(float(sum(Decimal(x['Award Amount']) for x in rows)))
     assert sum(x['Awards'] for x in r['recipients'])==969
     assert sum(x['Amount'] for x in r['agencies'])==pytest.approx(r['total'])
+    assert sum(x['Awards'] for x in r['distribution'])==969
 
 def test_filters_and_empty():
     agency=load_data()['Awarding Agency'].iloc[0]
@@ -31,4 +32,7 @@ def test_api_validation_and_retired_model():
     assert client.post('/research',json={'unknown':1}).status_code==422
     assert client.post('/predict',json={}).status_code==410
     assert client.post('/research',json={}).status_code==200
-    assert client.get('/metadata').json()['records']==969
+    metadata=client.get('/metadata').json()
+    assert metadata['records']==969
+    assert metadata['quality']['duplicate_internal_ids']==0
+    assert 'amount-ranked' in metadata['scope']
