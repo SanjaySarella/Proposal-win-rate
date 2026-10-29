@@ -1,31 +1,44 @@
-# Federal Award Research
+# Federal Award Record Research
 
-Procurement research by Sanjay Sarella. Three outputs: agency totals in a selected historical sample, recipient concentration, and matching awards with USAspending links and CSV export.
+A bounded public-data research case study for filtering, reconciling, and verifying federal award records. The application helps a user identify comparable records by agency, award type, value range, or description keyword and follow each result to its USAspending source page.
 
-## Why the scope changed
+## Dataset scope
 
-The old label `won_definitive` exactly separated 318 definitive contracts from 651 delivery orders; both are awarded contracts. It did not describe winning and losing bids. The supported runtime therefore has no bid-win classifier, SHAP win drivers, AI strategy brief or savings claims. `/predict` returns HTTP 410. Historical models and scripts are retained for provenance only and are not loaded by this application.
+The repository contains 969 unique award records from a stored USAspending extraction. The extraction is amount-ranked and concentrated near its $50 million upper bound. It is therefore an **upper-value research snapshot**, not a representative sample of the federal market. The application makes that limitation visible and does not interpret snapshot totals as annual spending or market share.
 
-## Data and interpretation
+## Workflow
 
-`data/processed/contracts_features.csv` contains 969 unique award identifiers. The collection script requests 2022–2024 award activity, award amounts $100,000–$50 million, ordered by descending amount and limited to ten pages. Acquisition timestamp is unknown. This is a selected historical snapshot, not a representative or complete federal market. Award start dates may precede the activity window. Sample composition does not establish market opportunity or award seasonality.
+1. Validate internal identifiers and award amounts.
+2. Filter records using explicit, literal criteria.
+3. Reconcile record count and total recorded value.
+4. Summarize agency distribution, award-value bands, and recipient concentration within the selection.
+5. Return comparable award records with direct source links.
+6. Export the full filtered selection for further review.
 
-The app sums the recorded `Award Amount` once per unique award. This is neither annual expenditure nor cash paid. Recipient groups use UEI where available and name otherwise. Concentration is relative to the filtered sample. Source links may show updated records. The app exposes a SHA-256 fingerprint for reproducibility and explicitly handles empty selections. Missing/duplicate IDs or invalid amounts stop analysis.
+## Decision supported
 
-## Run
+The project supports a research decision: which records in this bounded snapshot are comparable to a stated agency, award type, value range, or description? It does not predict bid outcomes, estimate the complete federal market, infer competitive position, or calculate savings.
 
-```sh
-python -m pip install -r backend/requirements.txt pytest httpx
-cd frontend
-npm ci --legacy-peer-deps
-npm run build
-cd ..
-cp -r frontend/build static
-python -m uvicorn backend.main:app --port 8080
+## Validation
+
+- Internal award identifiers must be complete and unique.
+- Award amounts must be finite and nonnegative.
+- Agency totals, recipient counts, and value-band counts reconcile to the filtered selection.
+- Keyword filtering is literal rather than regular-expression based.
+- Automated acceptance checks independently reconcile the source and API outputs.
+
+## Tools
+
+Python, pandas, FastAPI, React, pytest, Docker, Google Cloud Run. Portable SQL for the quality and reconciliation workflow is documented in `sql/analysis.sql`.
+
+## Run locally
+
+```bash
+pip install -r requirements.txt
+pytest -q
+python validation/acceptance.py
 ```
 
-`python -m pytest tests -q` checks independent Decimal reconciliation, filtering, empty results, literal text matching, input validation and retirement of prediction. Frontend tests exercise success and error rendering. Build and test results accompany the PR.
+## Live application
 
-## Deployment boundary
-
-Candidate implementation, not deployed. Preserve the existing `federal-contract-app` Cloud Run service and its URL. Confirm existing project, region, configuration and rollback revision first. No cloud CLI/session is available in the current build environment; a staging revision, container startup and live-browser acceptance are still required.
+https://federal-contract-app-646m5mi6fq-uc.a.run.app/
