@@ -13,7 +13,7 @@ export default function App(){
  const change=(key,value)=>{setForm({...form,[key]:value});setResult(null);};
  async function run(e){e.preventDefault();setBusy(true);setResult(null);setError('');try{const r=await fetch('/research',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...form,agency:form.agency||null,award_type:form.award_type||null})});const d=await r.json();if(!r.ok)throw Error(typeof d.detail==='string'?d.detail:'Review the search criteria and try again.');setResult(d);}catch(e){setError(e.message);}finally{setBusy(false);}}
  return <main>
- <header><p className="eyebrow">SANJAY SARELLA · PROCUREMENT ANALYTICS</p><h1>Federal Award Research</h1><p>Turn a traceable federal award snapshot into focused agency, supplier, and comparable-award intelligence.</p></header>
+ <header><p className="eyebrow">SANJAY SARELLA · DATA ANALYTICS PORTFOLIO</p><h1>Federal Award Research</h1><p>Turn a traceable federal award snapshot into focused agency, supplier, and comparable-award intelligence.</p></header>
  {meta&&<aside><strong>Research coverage: {meta.records.toLocaleString()} award records.</strong> {meta.scope}</aside>}
  <section className="workspace"><div className="section-intro"><h2>Build an award research view</h2><p>Choose the market segment and value range you want to examine. Every result links back to its underlying USAspending award record.</p></div>
  <form onSubmit={run}>
