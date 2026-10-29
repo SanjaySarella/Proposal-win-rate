@@ -21,10 +21,15 @@ def load_data():
 
 def metadata():
     df = load_data()
+    amounts = df['Award Amount']
     return {'records':len(df), 'agencies':sorted(df['Awarding Agency'].dropna().unique()),
             'types': sorted(df['Contract Award Type'].dropna().unique()),
             'sha256':hashlib.sha256(DATA.read_bytes()).hexdigest(),
-            'scope':'Historical, amount-ranked sample; not the complete federal market. Collection code requests awards with 2022–2024 activity and amounts $100,000–$50 million. Acquisition timestamp is not recorded. Award start dates may precede this window.'}
+            'quality':{'duplicate_internal_ids':int(df['generated_internal_id'].duplicated().sum()),
+                       'missing_award_amounts':int(df['Award Amount'].isna().sum()),
+                       'minimum_amount':float(amounts.min()),'median_amount':float(amounts.median()),
+                       'maximum_amount':float(amounts.max())},
+            'scope':'Bounded upper-value research snapshot, not a representative sample or estimate of the complete federal market. The stored extraction is amount-ranked and contains awards collected under a $100,000–$50 million request range. Acquisition timestamp is unavailable, and award start dates may fall outside 2022–2024.'}
 
 def research(agency=None, award_type=None, minimum=0, maximum=50000000, keyword=''):
     df = load_data()
@@ -45,10 +50,18 @@ def research(agency=None, award_type=None, minimum=0, maximum=50000000, keyword=
     selected['source_url'] = selected['generated_internal_id'].map(lambda x:'https://www.usaspending.gov/award/' + quote(x, safe=''))
     columns = ['Award ID','Recipient Name','Awarding Agency','Contract Award Type','Award Amount','Start Date','End Date','Description','source_url']
     records = selected.sort_values(['Award Amount','Award ID'],ascending=[False,True])[columns].fillna('').to_dict('records')
+    if len(selected):
+        bands = pd.cut(selected['Award Amount'], bins=[-np.inf,1_000_000,10_000_000,25_000_000,np.inf],
+                       labels=['Under $1M','$1M–$10M','$10M–$25M','$25M+'])
+        band_counts = bands.value_counts(sort=False)
+        distribution = [{'Band':str(k),'Awards':int(v)} for k,v in band_counts.items()]
+    else:
+        distribution = []
     return {'count':len(selected), 'total':total,
             'median':float(selected['Award Amount'].median()) if len(selected) else None,
             'largest_recipient_share':float(recipients.Amount.iloc[0]/total) if total and len(recipients) else None,
             'recipients':recipients.to_dict('records'),
             'agencies':[{'Agency':k,'Amount':float(v)} for k,v in agency_totals.items()],
+            'distribution':distribution,
             'records':records,
-            'method':'Sum of Award Amount once per unique award in the filtered snapshot. This is not annual spending, transaction flow, or cash paid. Recipient concentration uses UEI, falling back to name. Matching awards are descriptive examples, not evidence of win probability.'}
+            'method':'Sum of Award Amount once per unique award in the filtered snapshot. Results describe only this amount-ranked snapshot; they are not annual spending, transaction flow, cash paid, or federal market share. Recipient concentration uses UEI, falling back to name. Matching awards are descriptive examples, not evidence of win probability.'}
