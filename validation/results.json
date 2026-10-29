@@ -1,0 +1,7 @@
+{
+  "source_rows": 969,
+  "agency_type_combinations_reconciled": 72,
+  "maximum_total_difference_dollars": 2e-06,
+  "duplicate_award_ids": 0,
+  "scope": "Internal snapshot arithmetic and completeness, not independent confirmation that the historical source records remain current."
+}
